@@ -121,3 +121,76 @@ JOB_EXECUTION은 JOB_INSTANCE의 자식이다. JOB_INSTANCE에 대한 성공/샐
 ### 3-3. BATCH_JOB_EXECUTION_PARAMS
 
 BATCH_JOB_EXECUTION_PARAM 테이블은 BATCH_JOB_EXECUTION 테이블이 생성될 당시에 입력 받은 Job Parameter를 담고 있다.
+
+
+## 4. Spring Batch Job Flow
+
+### 4-1. Next
+
+Step들을 연결시킬 때 사용함. 
+
+### 지정된 Batch Job만 실행되도록
+
+application.yml
+
+```markdown
+#job.name이 있으면 왼쪽, 없으면 NONE
+spring.batch.job.names: ${job.name:NONE} 
+```
+
+이후에 Program arguments에 다음과 같이 입력
+
+```markdown
+--job.name=stepNextJob
+```
+
+![4-1](mdimgs/4-1.png)
+
+version은 계속해서 바꿔주어야 함.
+
+### 4-2. 조건별 흐름 제어 (Flow)
+
+Next의 문제는 특정 Step에서 오류 발생 시 다음 Step이 실행되지 않음.
+Flow는 조건에 맞게 Step을 수행하도록 도와줌!
+
+```java
+    // Step의 종료 값을 명시적으로 지정
+    contribution.setExitStatus(ExitStatus.FAILED);
+``` 
+
+### BatchStatus vs ExitStatus
+
+참고 : <a href="https://jojoldu.tistory.com/328?category=635883">https://jojoldu.tistory.com/328?category=635883</a>
+
+읽어보기....
+
+### 4-3. Decide
+
+분기를 담당!
+
+```java
+        @Bean
+        public JobExecutionDecider decider() {
+            return new OddDecider();
+        }
+    
+        public static class OddDecider implements JobExecutionDecider {
+    
+            @Override
+            public FlowExecutionStatus decide(JobExecution jobExecution, StepExecution stepExecution) {
+                Random rand = new Random();
+    
+                int randomNumber = rand.nextInt(50) + 1;
+                log.info("랜덤숫자: {}", randomNumber);
+    
+                if(randomNumber % 2 == 0) {
+                    return new FlowExecutionStatus("EVEN");
+                } else {
+                    return new FlowExecutionStatus("ODD");
+                }
+            }
+        }
+```
+
+## 참조
+https://jojoldu.tistory.com
