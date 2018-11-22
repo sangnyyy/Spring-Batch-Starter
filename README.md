@@ -192,5 +192,30 @@ Flow는 조건에 맞게 Step을 수행하도록 도와줌!
         }
 ```
 
-## 참조
+## 5. Scope & Job Parameter
+
+Spring Batche의 경우, 내/외부에서 파라미터를 받아 여러 Batch 컴포넌트에서 사용할 수 있다. 
+이 파라미터를 Job Parameter라고 한다.
+Job Parameter를 사용하기 위해서는 Scope를 선언해야 하는데, @JobScope와 @StepScope가 존재한다.
+파라미터는 @Value와 SpEL을 이용해서 받는다.
+
+```java
+// Step 선언문에서 사용
+@Bean
+@JobScope
+@Value("#{jobParameter[parameter]}")
+```
+
+```java
+// tasklet, itemwriter, itemreader, itemprocessor에서 사
+@Bean
+@StepScope
+@Value("#{jobParameter[parameter]}")
+```
+
+Job Parameter로는 Double, Long, Date, String 등의 타입을 사용할 수 있다.
+Job Scope는 Job 실행시점에 Bean으로 등록된다. Job Parameter의 Late Binding이 된다.
+
+
+### 참조
 https://jojoldu.tistory.com
