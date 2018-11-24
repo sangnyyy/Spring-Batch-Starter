@@ -216,6 +216,21 @@ Job Parameter를 사용하기 위해서는 Scope를 선언해야 하는데, @Job
 Job Parameter로는 Double, Long, Date, String 등의 타입을 사용할 수 있다.
 Job Scope는 Job 실행시점에 Bean으로 등록된다. Job Parameter의 Late Binding이 된다.
 
+## 7. ItemReader
+
+ItemReader는 데이터를 읽어들이는 역할.
+File, XML, JSON 등 다른 데이터 소스를 입력으로 사용할 수 있다.
+
+### Cursor VS Paging
+
+* Cursor 방식은 Database와 커넥션을 맺은 후, Cursor를 한칸씩 옮기며 지속적으로 데이터를 가져오는 방식
+* Paging 방식은 한번에 정해진 PageSize만큼의 데이터를 가져오는 방식 
+
+![](https://t1.daumcdn.net/cfile/tistory/993762465B9AFEDB2B)
+
+### PagingItemReader 주의사항
+
+정렬이 무조건 필요하다. 
 
 ### 참조
 https://jojoldu.tistory.com
