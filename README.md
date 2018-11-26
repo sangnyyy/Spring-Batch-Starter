@@ -232,5 +232,81 @@ File, XML, JSON 등 다른 데이터 소스를 입력으로 사용할 수 있다
 
 정렬이 무조건 필요하다. 
 
+## 8. ItemWriter
+
+ItemWriter는 출력 기능이다. Chunk 단위로 묶인 item list에 대한 처리를 수행한다.
+
+### JpaItemWriter
+
+JdbcItemWriter에 대한 내용은 생략..
+
+```java
+@Slf4j
+@RequiredArgsConstructor
+@Configuration
+public class JpaItemWriterJobConfiguration {
+    private final JobBuilderFactory jobBuilderFactory;
+    private final StepBuilderFactory stepBuilderFactory;
+    private final EntityManagerFactory entityManagerFactory;
+
+    private static final int chunkSize = 10;
+
+    @Bean
+    public Job jpaItemWriterJob() {
+        return jobBuilderFactory.get("jpaItemWriterJob")
+                .start(jpaItemWriterStep())
+                .build();
+    }
+
+    @Bean
+    public Step jpaItemWriterStep() {
+        return stepBuilderFactory.get("jpaItemWriterStep")
+                .<Pay, Pay2>chunk(chunkSize)
+                .reader(jpaItemWriterReader())
+                .processor(jpaItemProcessor())
+                .writer(jpaItemWriter())
+                .build();
+    }
+
+    @Bean
+    public JpaPagingItemReader<Pay> jpaItemWriterReader() {
+        return new JpaPagingItemReaderBuilder<Pay>()
+                .name("jpaItemWriterReader")
+                .entityManagerFactory(entityManagerFactory)
+                .pageSize(chunkSize)
+                .queryString("SELECT p FROM Pay p")
+                .build();
+    }
+
+    @Bean
+    public ItemProcessor<Pay, Pay2> jpaItemProcessor() {
+        return pay -> new Pay2(pay.getAmount(), pay.getTxName(), pay.getTxDateTime());
+    }
+
+    @Bean
+    public JpaItemWriter<Pay2> jpaItemWriter() {
+        JpaItemWriter<Pay2> jpaItemWriter = new JpaItemWriter<>();
+        jpaItemWriter.setEntityManagerFactory(entityManagerFactory);
+        return jpaItemWriter;
+    }
+}
+```
+spring-boot-starter-jpa를 의존성으로 등록하면 Entity Manager가 bean으로 자동 생성되어 DI만 해주면 된다.
+
+### Custom ItemWriter
+
+```java
+   @Bean
+   public ItemWriter<Pay2> customItemWriter() {
+       return items -> {
+           for (Pay2 item : items) {
+               System.out.println(item);
+           }
+       };
+   }
+```
+
+@Override write()에 대한 부분만 구현해주면 된다.
+
 ### 참조
 https://jojoldu.tistory.com
